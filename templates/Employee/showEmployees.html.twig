@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Employees{% endblock %}
+
+{% block body %}
+{#    {% if employees %}#}
+        <div class="row">
+            <div class="card-panel col s12">
+                <h3>Employees</h3>
+                <table id="employee" class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Birthday</th>
+                        <th>Gender</th>
+                        <th>Active</th>
+                        <th>Title</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+
+                <br>
+                <select id="filter">
+                    <option value="2">All Employees</option>
+                    <option value="1">Active</option>
+                    <option value="0">Inactive</option>
+                </select>
+                <br>
+                <a class="btn-floating btn-large waves-effect waves-light red" href="{{path('addemployee')}}" ><i class="material-icons">add</i></a>
+            </div>
+        </div>
+
+{% endblock %}
+
+{% block customJavascripts %}
+    <script>
+
+        $( document ).ready(function() {
+            var sFunction = function (response) {
+                response.forEach(element => {
+                    var titleNames = [];
+                    element.titles.forEach(title => titleNames.push(title.name))
+                    $('tbody')
+                    .append('<tr class="row_"' + element.id + '>' +
+                        '<td>'+ element.fullName + '</td>' +
+                        '<td>'+ new Date(element.birthday.timestamp*1000+86400000).toISOString().split('T')[0] + '</td>' +
+                        '<td>'+ element.gender + '</td>' +
+                        '<td>'+ element.active + '</td>' +
+                        '<td>'+ titleNames.join(', ') + '</td>' +
+                        '<td>'+ '<a href="/employee/edit/' + element.id + '"' + ' class="btn btn-light">Edit</a>' + '</td>' +
+                        '</tr>'
+                    )}
+                )
+            };
+
+            adapter.post("{{ path('json_show_all_employees') }}",'', sFunction);
+        });
+
+
+        $("#filter").change(function () {
+            $("tbody").empty();
+            var filter = parseInt($("#filter").val());
+
+            var sFunction = function (response) {
+                response.forEach(element => {
+                    var titleNames = [];
+                    element.titles.forEach(title => titleNames.push(title.name))
+                    var date = new Date(element.birthday.timestamp * 1000+86400000).toISOString().split('T')[0];
+                    $('tbody')
+                        .append('<tr class="row_"' + element.id + '>' +
+                            '<td>' + element.fullName + '</td>' +
+                            '<td>' + date + '</td>' +
+                            '<td>' + element.gender + '</td>' +
+                            '<td>' + element.active + '</td>' +
+                            '<td>' + titleNames.join(', ') + '</td>' +
+                            '<td>' + '<a href="/employee/edit/' + element.id + '"' + ' class="btn btn-light">Edit</a>' + '</td>' +
+                            '</tr>')
+                })
+            };
+            if (filter === 2){
+                adapter.post("{{ path('json_show_all_employees') }}",'', sFunction);
+            } else {
+                adapter.post("{{ path('json_show_custom_employees') }}", filter, sFunction);
+            }
+
+        });
+
+    </script>
+{% endblock %}

@@ -1,0 +1,8 @@
+nav .brand-logo {
+    padding: 7px 0 0 15px;
+}
+
+.nav_l:last-child {
+    margin-right: 10px;
+}
+

@@ -1,0 +1,138 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Employee{% endblock %}
+
+{% block body %}
+    <h1>Add Employee</h1>
+
+    <div class="row">
+        <div class="card-panel col s6">
+            <div class="row">
+                <div class="col s12">
+                    <div class="input-field inline">
+                        <input id="firstname" type="text" class="validate">
+                        <label for="firstname">Firstname</label>
+                        <span class="helper-text" data-error="wrong" id="firstname-message">No changes</span>
+                    </div>
+                </div>
+                <div class="col s12">
+                    <div class="input-field inline">
+                        <input id="lastname" type="text" class="validate">
+                        <label for="lastname">Lastname</label>
+                        <span class="helper-text" data-error="wrong" id="lastname-message">No changes</span>
+                    </div>
+                </div>
+                <div class="input-field col s12">
+                    <select id="gender">
+                        <option value="0">Gender</option>
+                        {% set genders = loadGenders() %}
+                        {% for gender in genders %}
+                            <option value="{{ gender }}">{{gender}}</option>
+                        {% endfor %}>
+                    </select>
+                    <label>Gender</label>
+                </div>
+                <div class="input-field col s12">
+                    <select class="js-example-basic-multiple browser-default" name="title[]" multiple="multiple" id="title">
+
+                    </select>
+                </div>
+                <div class="input-field col s12">
+                    <p>
+                        <label>
+                            <input type="checkbox" value="true" id="active">
+                            <span>Active</span>
+                        </label>
+                    </p>
+                </div>
+                <div class="col s12">
+
+                    <div class="input-field inline">
+                        <p>Date: <input type="text" id="birthday" readonly></p>
+                    </div>
+                </div>
+                <div class="col s12">
+                    <button id="add-employee" class="btn waves-effect waves-light" type="button" name="action">Save
+                        <i class="material-icons right">send</i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block customJavascripts %}
+    <script>
+        $( function() {
+            $( "#birthday" ).datepicker();
+        } );
+        $(document).ready(function() {
+            $('#birthday').val(new Date().toLocaleDateString());
+            var sFunction = function (response) {
+                response.titles.forEach(title => $('#title').append($('<option>', {
+                    value: title.id,
+                    text: title.name
+                })))
+
+            };
+            adapter.post("{{ path('json_show_titles') }}", '', sFunction)
+        });
+
+        $("#add-employee").click(function () {
+            var data = {
+                firstname: '',
+                lastname: '',
+                birthday: '',
+                gender: '',
+                active: '',
+                titles: []
+            };
+
+            if (validator.empty($("#firstname").val())){
+                $('#firstname-message').text('Required');
+            } else {
+                $('#firstname-message').text('Valid');
+                data.firstname = $("#firstname").val();
+            }
+            if (validator.empty($("#lastname").val())){
+                $('#lastname-message').text('Required');
+            } else {
+                $('#lastname-message').text('Valid');
+                data.lastname = $("#lastname").val();
+            }
+
+            if ($("#gender").val() !== '0'){
+                data.gender = $("#gender").val();
+            }
+
+            data.active = $("#active").is(':checked');
+
+            if ($("#title").val() !== '0'){
+                $("#title").val().forEach(element => data.titles.push({
+                    id: parseInt(element)
+                }))
+
+            }
+
+            data.birthday = $("#birthday").val();
+
+            var sFunction = function (response) {
+                if (response.code == '200') {
+                    M.toast({html: 'Added successufully!'})
+                    setTimeout(function () {
+                        window.location = "{{ path('show_employees') }}";
+                    }, 1000);
+                }
+                else {
+                    M.toast({html: 'Error!'})
+                }
+            };
+
+            if (!validator.empty(data.firstname) && !validator.empty(data.lastname) && !validator.empty(data.birthday) && !validator.empty(data.gender) && !validator.empty(data.active) && !validator.empty(data.titles)){
+                adapter.post("{{ path('json_add_employee') }}", data, sFunction);
+            } else {
+                M.toast({html: 'All fields are required!'})
+            }
+        });
+    </script>
+{% endblock %}
